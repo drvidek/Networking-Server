@@ -9,6 +9,9 @@ public class Player : MonoBehaviour
     public ushort Id { get; private set; }
     public string Username { get; private set; }
 
+    [SerializeField] private PlayerMovement _movement;
+    public PlayerMovement Movement => _movement;
+
     public static void Spawn(ushort id, string username)
     {
         foreach (Player otherPlayer in list.Values)
@@ -40,12 +43,12 @@ public class Player : MonoBehaviour
     #region Messages
     private void SendSpawned()
     {
-        NetworkManager.NetworkManagerInstance.GameServer.SendToAll(AddSpawnData(Message.Create(MessageSendMode.reliable, (ushort)ServerToClientID.playerSpawned)));
+        NetworkManager.NetworkManagerInstance.GameServer.SendToAll(AddSpawnData(Message.Create(MessageSendMode.reliable, ServerToClientID.playerSpawned)));
     }
 
     private void SendSpawned(ushort toClientId)
     {
-        NetworkManager.NetworkManagerInstance.GameServer.Send(AddSpawnData(Message.Create(MessageSendMode.reliable, (ushort)ServerToClientID.playerSpawned)), toClientId);
+        NetworkManager.NetworkManagerInstance.GameServer.Send(AddSpawnData(Message.Create(MessageSendMode.reliable, ServerToClientID.playerSpawned)), toClientId);
     }
 
     private Message AddSpawnData(Message message)
@@ -57,10 +60,20 @@ public class Player : MonoBehaviour
     }
 
     [MessageHandler((ushort)ClientToServerID.name)]
-    private static void Name(ushort fromCliendID, Message message)
+    private static void Name(ushort fromClientId, Message message)
     {
-        Spawn(fromCliendID, message.GetString());
+        Spawn(fromClientId, message.GetString());
     }
+
+    [MessageHandler((ushort)ClientToServerID.input)]
+    private static void Input(ushort fromClientId, Message message)
+    {
+        if (list.TryGetValue(fromClientId, out Player player))
+        {
+            player.Movement.SetInput(message.GetBools(6), message.GetVector3());
+        }
+    }
+
     #endregion
 
 }

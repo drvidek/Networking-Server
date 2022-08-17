@@ -2,13 +2,16 @@ using RiptideNetworking;
 using RiptideNetworking.Utils;
 using UnityEngine;
 
-public enum ServerToClientID
+public enum ServerToClientID : ushort
 {
-    playerSpawned = 1,
+    sync = 1,
+    playerSpawned,
+    playerMovement,
 }
-public enum ClientToServerID
+public enum ClientToServerID : ushort
 {
-    name = 1
+    name = 1,
+    input
 }
 
 public class NetworkManager : MonoBehaviour
@@ -47,6 +50,8 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private ushort s_port;
     [SerializeField] private ushort s_maxClientCount;
 
+    public ushort CurrentTick { get; private set; }
+
     private void Awake()
     {
         //when the object that this is attached to in game initialises, try to set the instance to this
@@ -71,6 +76,11 @@ public class NetworkManager : MonoBehaviour
     private void FixedUpdate()
     {
         GameServer.Tick();
+
+        if (CurrentTick % 200 == 0)
+            SendSync();
+
+        CurrentTick++;
     }
 
     //When the game closes, it kills the connection to the server
@@ -81,8 +91,15 @@ public class NetworkManager : MonoBehaviour
 
     private void PlayerLeft(object sender, ClientDisconnectedEventArgs e)
     {
-        //when a player leaves the server, Destroy the player object and remove from list
-        Destroy(Player.list[e.Id].gameObject);
+        if (Player.list.TryGetValue(e.Id, out Player player))
+            //when a player leaves the server, Destroy the player object and remove from list
+            Destroy(player.gameObject);
     }
 
+    private void SendSync()
+    {
+        Message message = Message.Create(MessageSendMode.unreliable, ServerToClientID.sync);
+        message.Add(CurrentTick);
+        GameServer.SendToAll(message);
+    }
 }

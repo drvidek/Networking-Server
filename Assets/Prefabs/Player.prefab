@@ -210,3 +210,6 @@ MonoBehaviour:
   _gravity: -9.81
   _playerSpd: 5
   _jumpHeight: 5
+  _grvAccel: -0.0061312504
+  _moveSpd: 0.125
+  _jumpSpd: 0.24761362

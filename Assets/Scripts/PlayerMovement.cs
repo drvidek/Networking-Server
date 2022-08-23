@@ -12,7 +12,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _gravity;
     [SerializeField] private float _playerSpd, _jumpHeight;
 
-    private float _grvAccel, _moveSpd, _jumpSpd;
+    [SerializeField] private float _grvAccel, _moveSpd, _jumpSpd;
 
     private bool[] _inputs;
     private float _yVelocity;
